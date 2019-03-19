@@ -45,7 +45,7 @@ public class Listen_to_Email {
 
     for ( Message message : messages ) {
       System.out.println( 
-          "sendDate: " + message.getSentDate()
+          "sendDate=: " + message.getSentDate()
           + " subject:" + message.getSubject() 
           +   "From: "  + message.getFrom()[0]
           +   "Text: "  + message.getContent().toString() );
