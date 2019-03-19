@@ -23,6 +23,7 @@ public class Listen_to_Email {
       properties.put("mail.smtp.port", "465");
       
     Session session = Session.getDefaultInstance(properties);
+   
     Store store = session.getStore("imaps");
     store.connect("imap.googlemail.com", 465, "listen.mail.s8@gmail.com", "projets8%");
     Folder inbox = store.getFolder("INBOX");
@@ -50,5 +51,7 @@ public class Listen_to_Email {
           +   "From: "  + message.getFrom()[0]
           +   "Text: "  + message.getContent().toString() );
     }
+    inbox.close(true);
+    store.close();
   }
 }
