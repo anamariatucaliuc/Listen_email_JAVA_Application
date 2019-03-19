@@ -11,47 +11,52 @@ import java.util.*;
 
 public class Listen_to_Email {
 
-  public static void main( String[] args ) throws Exception {
-	
-	  
-      Properties properties = new Properties();
-      
-      properties.put("mail.smtp.host", "smtp.gmail.com");
-      properties.put("mail.smtp.socketFactory.port", "465");
-      properties.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-      properties.put("mail.smtp.auth", "true");
-      properties.put("mail.smtp.port", "465");
-      
-    Session session = Session.getDefaultInstance(properties);
-   
-    Store store = session.getStore("imaps");
-    store.connect("imap.googlemail.com", 465, "listen.mail.s8@gmail.com", "projets8%");
-    Folder inbox = store.getFolder("INBOX");
-    inbox.open( Folder.READ_ONLY );
+    public static void main(String[] args) throws Exception {
 
-    // Fetch unseen messages from inbox folder
-    Message[] messages = inbox.search(
-        new FlagTerm(new Flags(Flags.Flag.SEEN), false));
-    System.out.println("messages.length---" + messages.length);
+        Properties properties = new Properties();
+        //Smtp Configuration
+        properties.put("mail.smtp.host", "smtp.gmail.com");
+        properties.put("mail.smtp.socketFactory.port", "465");
+        properties.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+        properties.put("mail.smtp.auth", "true");
+        properties.put("mail.smtp.port", "465");
+       
+        //create mail session object.
+        Session session = Session.getDefaultInstance(properties, null);
+        
+        //Create store(javax.mail.Store) to connect , read and retrieve messages from mail server using IMAP
+        Store store = session.getStore("imaps");
+        //connect the mail server 
+        store.connect("smtp.gmail.com", "listen.mail.s8@gmail.com", "projets8%");
+        
+        Folder inbox = store.getFolder("INBOX");
+        inbox.open(Folder.READ_ONLY);
+        int nombres_messages = inbox.getMessageCount();
+        System.out.println("On a "+nombres_messages + " dans l'INBOX");
+        
+        // Fetch unseen messages from inbox folder
+        Message[] messages = inbox.search(
+                new FlagTerm(new Flags(Flags.Flag.SEEN), false));
+        System.out.println("messages.length---" + messages.length);
 
-      
-    // Sort messages from recent to oldest
-    Arrays.sort( messages, ( message1, message2 ) -> {
-      try {
-        return message2.getSentDate().compareTo( message1.getSentDate() );
-      } catch ( MessagingException e ) {
-        throw new RuntimeException( e );
-      }
-    } );
-
-    for ( Message message : messages ) {
-      System.out.println( 
-          "sendDate=: " + message.getSentDate()
-          + " subject:" + message.getSubject() 
-          +   "From: "  + message.getFrom()[0]
-          +   "Text: "  + message.getContent().toString() );
+        // Sort messages from recent to oldest
+        Arrays.sort(messages, (message1, message2) -> {
+            try {
+                return message2.getSentDate().compareTo(message1.getSentDate());
+            } catch (MessagingException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        
+        // loop to read the messages
+        for (Message message : messages) {
+            System.out.println(
+                    "sendDate=: " + message.getSentDate()
+                    + " subject:" + message.getSubject()
+                    + "From: " + message.getFrom()[0]
+                    + "Text: " + message.getContent().toString());
+        }
+        inbox.close(true);
+        store.close();
     }
-    inbox.close(true);
-    store.close();
-  }
 }
