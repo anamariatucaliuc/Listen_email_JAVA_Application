@@ -7,7 +7,7 @@ package listen_to_email;
 
 /**
  * Activer "Autoriser les applications moins sécurisées"
- * Sinon erreur AuthentificationFailedException
+ * Sinon erreur AuthentificationFailedExceptio;n
  * Lien : https://myaccount.google.com/lesssecureapps
  */
 
