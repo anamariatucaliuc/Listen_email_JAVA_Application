@@ -19,12 +19,34 @@ import java.util.*;
 import javax.activation.DataHandler;
 import javax.mail.Flags.Flag;
 import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMultipart;
 
 public class ConnexionGmail {
 
+    private static String getTextFromMimeMultipart(MimeMultipart mimeMultipart) throws Exception {
+        String result = "";
+        //int partCount = mimeMultipart.getCount();
+        // for (int i = 0; i < partCount; i++) {
+            BodyPart bodyPart = mimeMultipart.getBodyPart(0);
+            if (bodyPart.isMimeType("text/plain")) {
+                //result = result + "\n" + bodyPart.getContent();
+                result = "\n" + bodyPart.getContent();
+                //break;
+            } else if (bodyPart.isMimeType("text/html")) {
+                String html = (String) bodyPart.getContent();
+                // result = result + "\n" + org.jsoup.Jsoup.parse(html).text();
+                result = html;
+            } else if (bodyPart.getContent() instanceof MimeMultipart) {
+                //result = result + getTextFromMimeMultipart((MimeMultipart) bodyPart.getContent());
+                result = getTextFromMimeMultipart((MimeMultipart) bodyPart.getContent());
+            }
+        //}
+        return result;
+    }
+    
     public static void main(String[] args) throws Exception {
 
-        final String username = "listen.mail.s8@gmail.com";
+        final String username = "listen2.mail.s8@gmail.com";
         final String motdepasse = "projets8%";
         final String host = "imap.gmail.com";
         try {
@@ -68,16 +90,15 @@ public class ConnexionGmail {
                     System.out.println("SentDate : " + messages[i].getSentDate());
                     System.out.println("From : " + messages[i].getFrom()[0]);
                     System.out.println("Subject : " + messages[i].getSubject());
-                    System.out.println("Text: " + messages[i].getContent().toString());
+                    
 
                     String contentType = messages[i].getContentType();
-
                     // store attachment file name, separated by comma
                     String attachFiles = "";
-
+                    Multipart multiPart = (Multipart) messages[i].getContent();
                     if (contentType.contains("multipart")) {
                         // content may contain attachments
-                        Multipart multiPart = (Multipart) messages[i].getContent();
+                        
                         int numberOfParts = multiPart.getCount();
                         for (int partCount = 0; partCount < numberOfParts; partCount++) {
                             MimeBodyPart part = (MimeBodyPart) multiPart.getBodyPart(partCount);
@@ -94,9 +115,10 @@ public class ConnexionGmail {
                         // si on n'a pas de pièce jointe on ne l'affiche pas 
                         if(attachFiles.length()>=1)
                             System.out.println("Attachments: " + attachFiles);
-                        else
-                             System.out.println("Le mail ne comporte pas de pièces jointes" );
+                        
+                       
                     }
+                    System.out.println("Text: " + getTextFromMimeMultipart((MimeMultipart) multiPart));
                     messages[i].setFlag(Flags.Flag.SEEN, true);
                     System.out.println();
 
