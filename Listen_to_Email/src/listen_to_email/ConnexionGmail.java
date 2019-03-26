@@ -94,6 +94,8 @@ public class ConnexionGmail {
                         // si on n'a pas de pièce jointe on ne l'affiche pas 
                         if(attachFiles.length()>=1)
                             System.out.println("Attachments: " + attachFiles);
+                        else
+                             System.out.println("Le mail ne comporte pas de pièces jointes" );
                     }
                     messages[i].setFlag(Flags.Flag.SEEN, true);
                     System.out.println();
