@@ -18,6 +18,7 @@ import javax.mail.search.FlagTerm;
 import java.util.*;
 import javax.activation.DataHandler;
 import javax.mail.Flags.Flag;
+import javax.mail.internet.MimeBodyPart;
 
 public class ConnexionGmail {
 
@@ -37,7 +38,7 @@ public class ConnexionGmail {
             
             int messageCount = inbox.getMessageCount();
             
-            System.out.println("Nombre des messages dans l'INBOX " + messageCount);
+            System.out.println("Nombre de messages dans l'INBOX " + messageCount);
             
             int unreadMsgCount = inbox.getUnreadMessageCount();
             
@@ -50,7 +51,7 @@ public class ConnexionGmail {
             System.out.println("On a  " + messages.length + " mails non lus ");
             
             if(messages.length==0)
-                System.out.println("Pas des messages non lus");
+                System.out.println("Pas de messages non lus");
             
             // Sort messages from recent to oldest
             Arrays.sort( messages, ( message1, message2 ) -> {
@@ -68,24 +69,31 @@ public class ConnexionGmail {
                 System.out.println("From : " + messages[i].getFrom()[0]);
                 System.out.println("Subject : " + messages[i].getSubject());
                 System.out.println( "Text: " + messages[i].getContent().toString());
-                /**
-                //pour les attachements
-                       Multipart multipart = (Multipart) messages[i].getContent();
-                  
-                  for (int x = 0; x < multipart.getCount(); x++) {
-                  BodyPart bodyPart = multipart.getBodyPart(x);
-                  
-                 String disposition = bodyPart.getDisposition();
-                 
-                  if (disposition != null && (disposition.equals(BodyPart.ATTACHMENT))) {
-                  System.out.println("Please find the   attachment : ");
-                  
-                  DataHandler handler = bodyPart.getDataHandler();
-                  System.out.println("Attachment Name: " + handler.getName());
-                  } else {
-                  System.out.println(bodyPart.getContent());
-                  }
-                  }**/
+                
+                String contentType = messages[i].getContentType();
+
+                // store attachment file name, separated by comma
+                String attachFiles = "";
+
+                if (contentType.contains("multipart")) {
+                        // content may contain attachments
+                        Multipart multiPart = (Multipart) messages[i].getContent();
+                        int numberOfParts = multiPart.getCount();
+                        for (int partCount = 0; partCount < numberOfParts; partCount++) {
+                                MimeBodyPart part = (MimeBodyPart) multiPart.getBodyPart(partCount);
+                                if (Part.ATTACHMENT.equalsIgnoreCase(part.getDisposition())) {
+                                        // this part is attachment
+                                        String fileName = part.getFileName();
+                                        attachFiles += fileName + ", ";
+                                }
+                        }
+
+                        if (attachFiles.length() > 1) {
+                                attachFiles = attachFiles.substring(0, attachFiles.length() - 2);
+                        }
+                }
+                System.out.println("Attachments: " + attachFiles);
+                
                 messages[i].setFlag(Flags.Flag.SEEN, true);
                 System.out.println();
                 
