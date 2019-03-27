@@ -43,10 +43,22 @@ public class ConnexionGmail {
         //}
         return result;
     }
+    private String getTextFromMessage(Message message) throws Exception {
+        String result = "";
+        if (message.isMimeType("multipart/*")) {
+            MimeMultipart mimeMultipart = (MimeMultipart) message.getContent();
+            result = getTextFromMimeMultipart(mimeMultipart);
+        } else {
+            Object content = message.getContent();
+            result = content.toString();
+        }
+
+        return result;
+    }
     
     public static void main(String[] args) throws Exception {
 
-        final String username = "listen2.mail.s8@gmail.com";
+        final String username = "listen.mail.s8@gmail.com";
         final String motdepasse = "projets8%";
         final String host = "imap.gmail.com";
         try {
@@ -124,6 +136,7 @@ public class ConnexionGmail {
 
                 }
                 inbox.close(true);
+                store.close();
             }
         } catch (IOException | MessagingException e) {}
     }
