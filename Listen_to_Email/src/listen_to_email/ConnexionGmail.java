@@ -4,7 +4,6 @@
  * and open the template in the editor.
  */
 package listen_to_email;
-
 /**
  * Activer "Autoriser les applications moins sécurisées" Sinon erreur
  * AuthentificationFailedExceptio;n Lien :
@@ -15,6 +14,7 @@ import com.voicerss.tts.AudioFormat;
 import com.voicerss.tts.Languages;
 import com.voicerss.tts.VoiceParameters;
 import com.voicerss.tts.VoiceProvider;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,12 +28,15 @@ import javax.activation.DataHandler;
 import javax.mail.Flags.Flag;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 import sun.audio.AudioPlayer;
 import sun.audio.AudioStream;
-
+@SuppressWarnings("deprecation")
 public class ConnexionGmail {
     
-    private static void getHTML(String urltoread) throws Exception{
+    /*private static void getHTML(String urltoread) throws Exception{
         StringBuilder result = new StringBuilder();
         URL url = new URL(urltoread);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -42,7 +45,8 @@ public class ConnexionGmail {
         AudioStream audioStream = new AudioStream(in);
         AudioPlayer.player.start(audioStream);
       //  String line;
-     }
+     }*/
+    
     /** fonction qui enregistre sous format mp3 dans le repertoire courant  */
     public static void register(String text) throws Exception{
         VoiceProvider tts = new VoiceProvider("c35f7f01e1c44bdba53f1b7e457b9670");
@@ -60,6 +64,14 @@ public class ConnexionGmail {
         fos.flush();
         fos.close();		
     }
+    
+    public static void play()throws Exception{
+        InputStream in=new FileInputStream("Enregistrement_INBOX.mp3");
+        AudioStream as=new AudioStream(in);
+        AudioPlayer.player.start(as);
+
+    }
+    
     private static String getTextFromMimeMultipart(MimeMultipart mimeMultipart) throws Exception {
         String result = "";
         //int partCount = mimeMultipart.getCount();
@@ -81,7 +93,7 @@ public class ConnexionGmail {
         return result;
     }
 
-    public static void check(String host, String username, String motdepasse) {
+    /*public static void check(String host, String username, String motdepasse) {
         try {
             Session session = Session.getDefaultInstance(new Properties());
             try (Store store = session.getStore("imaps")) {
@@ -165,8 +177,9 @@ public class ConnexionGmail {
             }
         } catch (IOException | MessagingException e) {
         }
-    }
-        public static void voiceconcat(String host, String username, String motdepasse) throws Exception {
+    }*/
+    
+    public static void voiceconcat(String host, String username, String motdepasse) throws Exception {
         String resultat = " ";
             try {
             Session session = Session.getDefaultInstance(new Properties());
@@ -174,28 +187,30 @@ public class ConnexionGmail {
                 store.connect(host, username, motdepasse);
 
                 Folder inbox = store.getFolder("INBOX");
-                resultat = resultat + "Lecture des messages non lus qui sont présents dans l'INBOX";
+                resultat = resultat + "Lecture des messages non lus qui sont présents dans la boîte de réception";
                 
                 inbox.open(Folder.READ_WRITE);
 
                 int messageCount = inbox.getMessageCount();
 
-                resultat = resultat + "\n Nombre de messages dans l'INBOX " + messageCount;
-                  
-                int unreadMsgCount = inbox.getUnreadMessageCount();
-
-                resultat = resultat + "\n Nombre de messages non lus: " + unreadMsgCount;
-                resultat = resultat + "\n ";
+                resultat = resultat + "\n Nombre de messages dans la boîte de réception : " + messageCount;
                  
                 // Fetch unseen messages from inbox folder
                 Message[] messages = inbox.search(
                         new FlagTerm(new Flags(Flag.SEEN), false));
 
-                resultat = resultat + "\n On a  " + messages.length + " mails non lus ";
-                 
-                if (messages.length == 0) {
+                //resultat = resultat + "\n On a  " + messages.length + " messages non lus ";
+                
+                int unreadMsgCount = inbox.getUnreadMessageCount();
+                
+                if (unreadMsgCount == 0) {
                     resultat = resultat + "\n Pas de messages non lus";
                 }
+                else {
+                    resultat = resultat + "\n Nombre de messages non lus: " + unreadMsgCount;
+                }
+                
+                resultat = resultat + "\n ";
                 
                 // Sort messages from recent to oldest
                 Arrays.sort(messages, (message1, message2) -> {
@@ -208,10 +223,10 @@ public class ConnexionGmail {
 
                 for (int i = 0; i < messages.length; i++) {
                     resultat = resultat +  "";
-                    resultat = resultat + "\n  DEBUT MAIL  ";
-                    resultat = resultat + "\n SentDate : " + messages[i].getSentDate();
-                    resultat = resultat + "\n From : " + messages[i].getFrom()[0];
-                    resultat = resultat + "\n Subject : " + messages[i].getSubject();
+                    resultat = resultat + "\n DEBUT MAIL " + (i+1);
+                    resultat = resultat + "\n Date d'envoi : " + messages[i].getSentDate();
+                    resultat = resultat + "\n Expéditeur : " + messages[i].getFrom()[0];
+                    resultat = resultat + "\n Objet : " + messages[i].getSubject();
                     
                     String contentType = messages[i].getContentType();
                     // store attachment file name, separated by comma
@@ -235,10 +250,10 @@ public class ConnexionGmail {
                         }
                         // si on n'a pas de pièce jointe on ne l'affiche pas 
                         if (attachFiles.length() >= 1) {
-                            resultat = resultat + "Attachments: " + attachFiles;
+                            resultat = resultat + "\n Pièces jointes : " + attachFiles;
                         }
                     } 
-                    resultat = resultat + "Text: " + getTextFromMimeMultipart((MimeMultipart) multiPart);
+                    resultat = resultat + "\n Texte : " + getTextFromMimeMultipart((MimeMultipart) multiPart);
                     
                     messages[i].setFlag(Flags.Flag.SEEN, true);   
                 }
@@ -264,11 +279,12 @@ public class ConnexionGmail {
     public static void main(String[] args) throws Exception {
 
         final String host = "imap.gmail.com";
-        final String username = "listen.mail.s8@gmail.com";
+        final String username = "listen2.mail.s8@gmail.com";
         final String motdepasse = "projets8%";
 
         //check(host, username, motdepasse);
         /** on concatene le résultat */
         voiceconcat(host, username, motdepasse);
+        play();
     }
 }

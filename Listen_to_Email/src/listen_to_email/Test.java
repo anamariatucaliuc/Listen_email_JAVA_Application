@@ -58,9 +58,9 @@ public class Test {
     public static void main (String [] args) throws Exception{
         try{
         System.out.println("  == Debut Test VoiceRss ==   ");
-      //  getHTML("http://api.voicerss.org/?key=c35f7f01e1c44bdba53f1b7e457b9670&hl=fr-fr&scr="  
-     //          + URLEncoder.encode("Message pour tester l'appication VoiceRSS","UTF-8"));
-     playSound("Rapport bic pour le devellopement durable ");   
+        getHTML("http://api.voicerss.org/?key=c35f7f01e1c44bdba53f1b7e457b9670&hl=fr-fr&scr="  
+               + URLEncoder.encode("Message pour tester l'appication VoiceRSS","UTF-8"));
+     //playSound("Rapport bic pour le devellopement durable ");   
      System.out.println("  == Fin Test VoiceRss ==   ");
         }
         catch (Exception e){
