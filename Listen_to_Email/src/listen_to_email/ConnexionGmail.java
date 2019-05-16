@@ -31,6 +31,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.activation.DataHandler;
 import javax.mail.Flags.Flag;
+import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
 import javax.mail.internet.MimeMultipart;
 import javax.sound.sampled.AudioInputStream;
@@ -163,16 +164,16 @@ public class ConnexionGmail {
         }      
     }
     
-     public static void create_csv(String host, String username, String motdepasse) throws Exception {
-       
+     public static void create_csv_envoyes(String host, String username, String motdepasse,String fichier) throws Exception {
+            
             try {
             Session session = Session.getDefaultInstance(new Properties());
             Store store = session.getStore("imaps");
                 store.connect(host, username, motdepasse);
 
-                Folder inbox = store.getFolder("INBOX");
+                Folder inbox = store.getFolder("[Gmail]/Messages envoyés");
                 //store.getDefaultFolder().list("*");
-                Folder sent_message = store.getFolder("SENT");
+                //Folder sent_message = store.getFolder("SENT");
                 inbox.open(Folder.READ_WRITE);
 
                 int messageCount = inbox.getMessageCount();
@@ -183,8 +184,51 @@ public class ConnexionGmail {
                 String expediteur = "";
                 for (int i = 0; i < lus.length; i++) {
                     // messages[i].getFrom()[0];
-                    if (i==0) expediteur = expediteur + lus[i].getFrom()[0];
-                    else expediteur = expediteur + ";" + lus[i].getFrom()[0];
+                    //List<String> toAddresses = new ArrayList<String>();
+                    Address[] recipients = lus[i].getRecipients(Message.RecipientType.TO);
+                    for (Address address : recipients) {
+                        //toAddresses.add(address.toString());
+                        expediteur = expediteur + ";" + address.toString();
+                    }
+                    //if (i==0) expediteur = expediteur + lus[i].getFrom()[0];
+                    //else expediteur = expediteur + ";" + lus[i].getFrom()[0];
+                }
+                
+                compterEmail(expediteur,fichier);
+                
+                inbox.close(true);
+                store.close();
+            }
+         catch (MessagingException  e) {
+               System.out.println(" dans le catch ");
+               e.printStackTrace();
+        }      
+    }
+     
+     public static void create_csv_recus(String host, String username, String motdepasse,String fichier) throws Exception {
+            
+            try {
+            Session session = Session.getDefaultInstance(new Properties());
+            Store store = session.getStore("imaps");
+                store.connect(host, username, motdepasse);
+
+                Folder inbox = store.getFolder("INBOX");
+                //store.getDefaultFolder().list("*");
+                //Folder sent_message = store.getFolder("SENT");
+                inbox.open(Folder.READ_WRITE);
+
+                int messageCount = inbox.getMessageCount();
+
+                Message[] lus = inbox.search(
+                        new FlagTerm(new Flags(Flag.SEEN), true));
+                
+                String expediteur = "";
+                for (int i = 0; i < lus.length; i++) {
+                    // messages[i].getFrom()[0];
+                    Address address = lus[i].getFrom()[0];
+                    String mail = ((InternetAddress) address).getAddress();
+                    if (i==0) expediteur = expediteur + mail;
+                    else expediteur = expediteur + ";" + mail;
                 }
    
                 // Fetch unseen messages from inbox folder
@@ -193,20 +237,24 @@ public class ConnexionGmail {
 
                 for (int i = 0; i < non_lus.length; i++) {
                     // messages[i].getFrom()[0];
-                    expediteur = expediteur + ";" + non_lus[i].getFrom()[0];
-                    non_lus[i].setFlag(Flags.Flag.SEEN, true);
+                    Address address = non_lus[i].getFrom()[0];
+                    String mail = ((InternetAddress) address).getAddress();
+                    expediteur = expediteur + ";" + mail;
+                    //non_lus[i].setFlag(Flags.Flag.SEEN, true);
                 }
-                compterEmail(expediteur);
+                
+                compterEmail(expediteur,fichier);
                 
                 inbox.close(true);
                 store.close();
             }
          catch (MessagingException  e) {
                System.out.println(" dans le catch ");
+               e.printStackTrace();
         }      
     }
 
-    public static void compterEmail (String text) throws IOException {
+    public static void compterEmail (String text, String fichier) throws IOException {
       Hashtable table = new Hashtable();
  
       StringTokenizer st;
@@ -229,7 +277,7 @@ public class ConnexionGmail {
 
                     // first create file object for file placed at location 
         // specified by filepath 
-        File file = new File("messages_recus.csv");
+        File file = new File(fichier);
         try { 
             // create FileWriter object with file as parameter 
             FileWriter outputfile = new FileWriter(file); 
@@ -274,6 +322,21 @@ public class ConnexionGmail {
 
         /** on concatene le résultat */
         //voiceconcat(host, username, motdepasse);
-        create_csv(host, username, motdepasse);
+        System.out.println("Messages recus");
+        create_csv_recus(host, username, motdepasse,"messages_recus.csv");
+        
+        System.out.println("Messages envoyes");
+        create_csv_envoyes(host, username, motdepasse,"messages_envoyes.csv");
+
+        // Afficher folders accessibles
+        /*Properties props = System.getProperties();
+        props.setProperty("mail.store.protocol", "imaps");
+        Session session = Session.getInstance(props, null);
+        Store store = session.getStore();
+        store.connect(host, username, motdepasse);
+        Folder[] folderList = store.getFolder("[Gmail]").list();
+        for (int i = 0; i < folderList.length; i++) {
+            System.out.println(folderList[i].getFullName());
+        }*/
     }
 }
